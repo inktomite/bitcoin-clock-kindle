@@ -1,9 +1,11 @@
 name: Update Bitcoin Clock (Kindle)
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "*/1 * * * *"  # every minute
+  workflow_dispatch:        # Allows manual run
+  push:                     # Run on push to main
+    branches: [ "main" ]
+  schedule:                 # Run every minute
+    - cron: "*/1 * * * *"
 
 permissions:
   contents: write

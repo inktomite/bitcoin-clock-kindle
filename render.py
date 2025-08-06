@@ -3,7 +3,6 @@ import json, urllib.request, time, pathlib
 
 OUT = pathlib.Path(__file__).resolve().parent / "index.html"
 
-# 3x5 block font patterns
 DIGITS = {
     "0": [[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],
     "1": [[0,1,0],[1,1,0],[0,1,0],[0,1,0],[1,1,1]],
@@ -49,20 +48,71 @@ def render_svg_for_text(text, block=24, gap=6, margin=20):
                     rects.append(f'<rect x="{x}" y="{y}" width="{block}" height="{block}" rx="4" ry="4"/>')
         x_cursor += char_width + char_gap
 
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="{text}" style="max-width:100%; height:auto;">
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="{text}" style="max-width:100%; height:auto;">
   <title>{text}</title>
   <g fill="#000000">
     {''.join(rects)}
   </g>
-</svg>'''
+</svg>"""
     return svg
 
 def build_html(text, svg):
     last_updated = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
-    return f'''<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bitcoin Clock</title>
-  <meta http-equiv
+  <meta http-equiv="refresh" content="15">
+  <style>
+    html, body {{
+      height: 100%;
+      margin: 0;
+      background: #ffffff;
+      color: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: monospace;
+    }}
+    .wrap {{
+      text-align: center;
+      padding: 1em;
+    }}
+    .updated {{
+      margin-top: 12px;
+      font-size: 14px;
+      color: #444;
+    }}
+    svg {{
+      display: block;
+      margin: 0 auto;
+    }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    {svg}
+    <div class="updated">Last updated: {last_updated}</div>
+  </div>
+</body>
+</html>"""
+
+def main():
+    try:
+        price = fetch_btc_usd()
+    except Exception:
+        text = "ERROR"
+        svg = render_svg_for_text(text)
+        html = build_html(text, svg)
+        OUT.write_text(html, encoding="utf-8")
+        return
+
+    text = format_price_int(price)
+    svg = render_svg_for_text(text)
+    html = build_html(text, svg)
+    OUT.write_text(html, encoding="utf-8")
+
+if __name__ == "__main__":
+    main()
